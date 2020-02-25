@@ -252,7 +252,7 @@ def main():
     plt.ylabel('fitness')
     plt.xlabel('no. of generations')
     plt.show()
-
+#
 
 main()
 
