@@ -11,11 +11,12 @@ import time
 # Define constants
 # ==============================
 
-no_of_generations = 100  # number of rounds of breeding
+no_of_generations = 1000  # number of rounds of breeding
 pop_size = 120  # each generation has this number of routes
 how_many_to_kill = 75  # number of routes to remove from population each round
-prob_mut = 0.01  # probability that mutation occurs on a route
-
+prob_mut = 0.5  # probability that mutation occurs on a route
+percentage_mut = 0.1
+percentage_kill = 0.8
 
 # def create_new_route():
 #     start = np.array([0])
@@ -90,18 +91,21 @@ def crossover(a, b):
     return a_copy, b_copy
 
 
-def mutate(routes, prob_mut):
+def mutate(routes, our_map):
     """
     :param routes: routes to mutate (or not)
     :param prob_mut: probability of performing mutation
     :return: routes after mutation
     """
 
-    new_routes = []
 
-    for a in routes:
-
-        if random.random() > prob_mut:  # probability of running following code is prob_mut
+    ranked_pop = [[fitness(route, our_map), route] for route in routes]
+    new_routes = ranked_pop[:-(int(len(routes) * percentage_mut))]
+    worse_routes = ranked_pop[-(int(len(routes) * percentage_mut)):]
+    input(len(worse_routes))
+    for a in worse_routes:
+        if random.random() < prob_mut:  # probability of running following code is prob_mut
+            print("Probably never running this. Probably.")
             i = random.randint(1, len(a) - 2)  # random place position
             j = i
 
@@ -113,8 +117,7 @@ def mutate(routes, prob_mut):
             a[i] = a[j]
             a[j] = temp
 
-        new_routes.append(a)
-
+        np.append(new_routes, a)
     return new_routes
 
 
@@ -155,9 +158,7 @@ def score_population(population, our_map):
 
 def sort_population(population, our_map):
     scores = score_population(population, our_map)
-
     np_scores = np.array(scores)
-
     return np_scores.argsort()
 
 
@@ -174,29 +175,24 @@ def fitness_of_best_in_population(population, our_map):
     return fit
 
 
-def remove_from_pop(num_kill, population, our_map):
+def selection(population, our_map):
     ranked_pop = sort_population(population, our_map)
-    survival_of_the_fittest = ranked_pop[0: (len(population) - num_kill)]
-
-    return np.array(survival_of_the_fittest)
+    survival_of_the_fittest = ranked_pop[: (int(len(population)*(1-percentage_kill)))]
+    return [population[i] for i in np.array(survival_of_the_fittest)]
 
 
 def breeding(population, our_map, num_places):
-    fittest = remove_from_pop(how_many_to_kill, population, our_map)
     children = []
-
     keep = 4
-
-    for i in range(0, keep):
-        children.append(population[fittest[i]])
+    # for i in range(0, keep):
+    #     children.append(population[fittest[i]])
     while len(children) < pop_size:
-        parent_1_index = random.randint(0, len(fittest) - 1)
+        parent_1_index = random.randint(0, len(population) - 1)
         parent_2_index = parent_1_index
         while parent_1_index == parent_2_index:
-            parent_2_index = random.randint(0, len(fittest) - 1)
-        child = crossover(population[fittest[parent_1_index]], population[fittest[parent_2_index]])[0]
+            parent_2_index = random.randint(0, len(population) - 1)
+        child = crossover(population[parent_1_index], population[parent_2_index])[0]
         # child = population[fittest[parent_1_index]]
-
         children.append(child)
 
     # for i in range(keep, len(fittest) - 1, 2):
@@ -227,32 +223,36 @@ def main():
     for counter, location_object in enumerate(locations):
         num_to_object[counter] = location_object
         object_to_num[location_object] = counter
-
     our_map = generator.adjacency_matrix_generator()
+
     population = create_generation(pop_size, our_map, N)
 
     best_routes = []
-    fitnesses = []
+    best_scores = []
 
     for i in range(0, no_of_generations):
-        best_routes.append(best_in_population(population, our_map))
-        fitnesses.append(fitness_of_best_in_population(population, our_map))
-        breeding(population, our_map, N)
-
+        # Recording test routes
+        current_best = best_in_population(population, our_map)
+        best_routes.append(current_best)
+        best_scores.append(fitness(current_best, our_map))
+        
+        population = selection(population, our_map)
         population = breeding(population, our_map, N)
+        population = mutate(population, our_map)
+
 
     last = None
-    for current_route in best_routes:
+    for current_route in best_routes[-10:]:
         locations_to_render = [num_to_object[x] for x in current_route]
         if last != locations_to_render:
             generator.renderLocations(locations_to_render)
         last = locations_to_render
 
-    plt.plot(np.arange(0, no_of_generations), fitnesses)
+    plt.plot(np.arange(0, no_of_generations), best_scores)
     plt.ylabel('fitness')
     plt.xlabel('no. of generations')
     plt.show()
-#
+
 
 main()
 
