@@ -13,10 +13,9 @@ import time
 
 no_of_generations = 1000  # number of rounds of breeding
 pop_size = 120  # each generation has this number of routes
-how_many_to_kill = 75  # number of routes to remove from population each round
-prob_mut = 0.5  # probability that mutation occurs on a route
-percentage_mut = 0.1
-percentage_kill = 0.8
+prob_mut = 0.02  # probability that mutation occurs on a route
+percentage_mut = 0.95  # percentage of pop to take as worst routes and to mutate
+percentage_kill = 0.8  # percentage to kill out of pop
 
 # def create_new_route():
 #     start = np.array([0])
@@ -50,61 +49,81 @@ def create_new_route(num_places):
     return route
 
 
+# def crossover(a, b):
+#     """
+#     :param a: route to crossover
+#     :param b: route to crossover
+#     :return: a, b: routes after crossover
+#     """
+#
+#     a_copy = a.copy()
+#     b_copy = b.copy()
+#
+#     intersection = -1  # first intersection point index
+#
+#     for i in range(1, len(a_copy) - 2):  # find the first intersection point
+#         if a_copy[i] == b_copy[i]:
+#             intersection = i
+#             break
+#
+#     if intersection >= 0:  # if some intersection point exists
+#
+#         random_index = intersection
+#
+#         while random_index == intersection:  # generate a random index that is not intersection
+#             random_index = random.randint(1, len(a) - 2)
+#
+#         # swap intersection place with random place
+#         temp = a_copy[intersection]
+#         a_copy[intersection] = a_copy[random_index]
+#         a_copy[random_index] = temp
+#
+#         # this code is unreachable
+#         # while random_index == intersection:  # generate a random index that is not intersection
+#         #    random_index = random.randint(1, len(a) - 2)
+#
+#         # swap intersection place with random place
+#         temp = b_copy[intersection]
+#         b_copy[intersection] = b_copy[random_index]
+#         b_copy[random_index] = temp
+#
+#     return a_copy, b_copy
+
+
 def crossover(a, b):
-    """
-    :param a: route to crossover
-    :param b: route to crossover
-    :return: a, b: routes after crossover
-    """
+    new_child = []
+    child1 = []
+    child2 = []
 
-    a_copy = a.copy()
-    b_copy = b.copy()
+    gene1 = int(random.random() * len(a))
+    gene2 = int(random.random() * len(a))
 
-    intersection = -1  # first intersection point index
+    start_gene = min(gene1, gene2)
+    end_gene = max(gene1, gene2)
 
-    for i in range(1, len(a_copy) - 2):  # find the first intersection point
-        if a_copy[i] == b_copy[i]:
-            intersection = i
-            break
+    for i in range(start_gene, end_gene):
+        child1.append(a[i])
 
-    if intersection >= 0:  # if intersection is not empty
+    child2 = [item for item in b if item not in child1]
 
-        random_index = intersection
-
-        while random_index == intersection:  # generate a random index that is not intersection
-            random_index = random.randint(1, len(a) - 2)
-
-        # swap intersection place with random place
-        temp = a_copy[intersection]
-        a_copy[intersection] = a_copy[random_index]
-        a_copy[random_index] = temp
-
-        # this code is unreachable
-        # while random_index == intersection:  # generate a random index that is not intersection
-        #    random_index = random.randint(1, len(a) - 2)
-
-        # swap intersection place with random place
-        temp = b_copy[intersection]
-        b_copy[intersection] = b_copy[random_index]
-        b_copy[random_index] = temp
-
-    return a_copy, b_copy
+    new_child = child1 + child2
+    return new_child
 
 
 def mutate(routes, our_map):
     """
     :param routes: routes to mutate (or not)
-    :param prob_mut: probability of performing mutation
     :return: routes after mutation
     """
-
 
     ranked_pop = [routes[i] for i in sort_population(routes, our_map)]
     new_routes = ranked_pop[:-(int(len(routes) * percentage_mut))]
     worse_routes = ranked_pop[-(int(len(routes) * percentage_mut)):]
+
+    new_routes = []
+
     for a in worse_routes:
         if random.random() < prob_mut:  # probability of running following code is prob_mut
-            #print("Probably never running this. Probably.")
             i = random.randint(1, len(a) - 2)  # random place position
             j = i
 
@@ -116,7 +135,7 @@ def mutate(routes, our_map):
             a[i] = a[j]
             a[j] = temp
 
-        np.append(new_routes, a)
+        new_routes.append(a)
     return new_routes
 
 
@@ -138,12 +157,12 @@ def fitness(a, our_map):
 
 
 def create_generation(pop_size, our_map, num_places):
-    population = []
+    new_pop = []
 
     for i in range(0, pop_size):
-        population.append(create_new_route(num_places))
+        new_pop.append(create_new_route(num_places))
 
-    return population
+    return new_pop
 
 
 def score_population(population, our_map):
@@ -180,34 +199,26 @@ def selection(population, our_map):
     return [population[i] for i in np.array(survival_of_the_fittest)]
 
 
-def breeding(population, our_map, num_places):
+def breeding(population):
     children = []
-    keep = 4
-    # for i in range(0, keep):
-    #     children.append(population[fittest[i]])
-    while len(children) < pop_size:
+
+    while len(children) < pop_size-1:
         parent_1_index = random.randint(0, len(population) - 1)
         parent_2_index = parent_1_index
         while parent_1_index == parent_2_index:
             parent_2_index = random.randint(0, len(population) - 1)
-        child = crossover(population[parent_1_index], population[parent_2_index])[0]
-        # child = population[fittest[parent_1_index]]
+        child = crossover(population[parent_1_index], population[parent_2_index])
         children.append(child)
 
-    # for i in range(keep, len(fittest) - 1, 2):
-    #     child_1 = crossover(population[fittest[i]], population[fittest[i + 1]])[0]
-    #     child_2 = crossover(population[fittest[i]], population[fittest[i + 1]])[1]
-    #     children.append(child_1)
-    #     children.append(child_2)
-    # while len(children) < pop_size:
-    #     counter += 1
-    #     new_route = create_new_route(num_places)
-    #     children.append(new_route)
-
-    return np.array(children)
+    return children
 
 
 def main():
+
+    # ==============================
+    # Pre-processing
+    # ==============================
+
     # our_map = initialise_map(lower_limit)
     names_of_locations_temp = ["kelseys", "the fat pug", "the town house", "the old library", "the clarendon",
                                "the benjamin satchwell", "murphy's bar", "The Royal Pug", "the white house",
@@ -224,6 +235,10 @@ def main():
         object_to_num[location_object] = counter
     our_map = generator.adjacency_matrix_generator()
 
+    # ==============================
+    # Run learning algorithm
+    # ==============================
+
     population = create_generation(pop_size, our_map, N)
 
     best_routes = []
@@ -236,9 +251,12 @@ def main():
         best_scores.append(fitness(current_best, our_map))
         
         population = selection(population, our_map)
-        population = breeding(population, our_map, N)
+        population = breeding(population)
         population = mutate(population, our_map)
 
+    # ==============================
+    # Plot best route scores
+    # ==============================
 
     last = None
     for current_route in best_routes[-10:]:
