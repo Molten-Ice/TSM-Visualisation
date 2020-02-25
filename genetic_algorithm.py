@@ -7,28 +7,15 @@ import seaborn as sb
 from map import *
 import time
 
-no_of_generations = 100
-lower_limit = 0.1
+# ==============================
+# Define constants
+# ==============================
+
+no_of_generations = 100  # number of rounds of breeding
 N = 10
-pop_size = 100
-how_many_to_kill = 75
-prob_mut = 0.0001
-
-
-def initialise_map(lower_limit):
-    # N is the number of pubs
-    # random.random() generates a random float X ~ Unif([0,1)), we define lower_limit to avoid zeros
-
-    our_map = np.zeros((N, N))
-
-    # the adjacency matrix is a real symmetric matrix with zero entries along the diagonal
-
-    for i in range(0, N):
-        for j in range(0, i):  # do not include i since the diagonal is zero
-            our_map[i][j] = random.random() * 100
-            our_map[j][i] = our_map[i][j]
-
-    return our_map
+pop_size = 100  # each generation has this number of routes
+how_many_to_kill = 75  # number of routes to remove from population each round
+prob_mut = 0.0001  # probability that mutation occurs on a route
 
 
 def create_new_route():
@@ -69,7 +56,7 @@ def crossover(a, b):
         b[c[0]] = b[index]
         b[index] = temp
 
-    return (a, b)
+    return a, b
 
 
 def mutate(a, prob_mut):
@@ -164,7 +151,7 @@ def breeding(population, our_map):
 
 
 def main():
-    #our_map = initialise_map(lower_limit)
+    # our_map = initialise_map(lower_limit)
     names_of_locations_temp = ["kelseys", "the fat pug", "the town house", "the old library", "the clarendon",
                                "the benjamin satchwell", "murphy's bar", "The Royal Pug", "the white house",
                                "The Drawing Board"]
@@ -202,6 +189,7 @@ def main():
     plt.ylabel('fitness')
     plt.xlabel('no. of generations')
     plt.show()
+
 
 main()
 
