@@ -58,10 +58,13 @@ def crossover(a, b):
     :return: a, b: routes after crossover
     """
 
+    a_copy = a.copy()
+    b_copy = b.copy()
+
     intersection = -1  # first intersection point index
 
-    for i in range(1, len(a) - 2):  # find the first intersection point
-        if a[i] == b[i]:
+    for i in range(1, len(a_copy) - 2):  # find the first intersection point
+        if a_copy[i] == b_copy[i]:
             intersection = i
             break
 
@@ -70,23 +73,23 @@ def crossover(a, b):
         random_index = intersection
 
         while random_index == intersection:  # generate a random index that is not intersection
-            random_index = random.randint(1, len(a) - 2)
+            random_index = random.randint(1, len(a_copy) - 2)
 
         # swap intersection place with random place
         temp = a[intersection]
-        a[intersection] = a[random_index]
-        a[random_index] = temp
+        a_copy[intersection] = a_copy[random_index]
+        a_copy[random_index] = temp
 
         # this code is unreachable
         # while random_index == intersection:  # generate a random index that is not intersection
         #    random_index = random.randint(1, len(a) - 2)
 
         # swap intersection place with random place
-        temp = b[intersection]
-        b[intersection] = b[random_index]
-        b[random_index] = temp
+        temp = b_copy[intersection]
+        b_copy[intersection] = b_copy[random_index]
+        b_copy[random_index] = temp
 
-    return a, b
+    return a_copy, b_copy
 
 
 def mutate(routes, prob_mut):
@@ -191,10 +194,10 @@ def breeding(population, our_map, num_places):
     for i in range(0, keep):
         children.append(population[fittest[i]])
     while len(children) < pop_size:
-        parent_1_index = random.randint(0, len(fittest)-1)
+        parent_1_index = random.randint(keep, len(fittest)-1)
         parent_2_index = parent_1_index
         while parent_1_index == parent_2_index:
-            parent_2_index = random.randint(0, len(fittest)-1)
+            parent_2_index = random.randint(keep, len(fittest)-1)
         child = crossover(population[fittest[parent_1_index]], population[fittest[parent_2_index]])[0]
         children.append(child)
 
@@ -207,8 +210,6 @@ def breeding(population, our_map, num_places):
     #     counter += 1
     #     new_route = create_new_route(num_places)
     #     children.append(new_route)
-
-
 
     return np.array(children)
 
