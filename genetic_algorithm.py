@@ -99,13 +99,12 @@ def mutate(routes, our_map):
     """
 
 
-    ranked_pop = [[fitness(route, our_map), route] for route in routes]
+    ranked_pop = [routes[i] for i in sort_population(routes, our_map)]
     new_routes = ranked_pop[:-(int(len(routes) * percentage_mut))]
     worse_routes = ranked_pop[-(int(len(routes) * percentage_mut)):]
-    input(len(worse_routes))
     for a in worse_routes:
         if random.random() < prob_mut:  # probability of running following code is prob_mut
-            print("Probably never running this. Probably.")
+            #print("Probably never running this. Probably.")
             i = random.randint(1, len(a) - 2)  # random place position
             j = i
 
@@ -159,7 +158,7 @@ def score_population(population, our_map):
 def sort_population(population, our_map):
     scores = score_population(population, our_map)
     np_scores = np.array(scores)
-    return np_scores.argsort()
+    return np_scores.argsort().tolist()
 
 
 def best_in_population(population, our_map):
