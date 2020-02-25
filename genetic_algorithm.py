@@ -32,16 +32,15 @@ prob_mut = 0.01  # probability that mutation occurs on a route
 
 def create_new_route(num_places):
     """
-
     :param num_places: number of places to permute
     :return: route: permutation of places
     """
 
     start = np.array([0])  # start of route
 
-    intermediate_steps = np.random.permutation(np.arange(1, num_places-1))  # places in between
+    intermediate_steps = np.random.permutation(np.arange(1, num_places - 1))  # places in between
 
-    end = np.array([num_places-1])  # end of route
+    end = np.array([num_places - 1])  # end of route
 
     # put route together
     temp = np.append(start, intermediate_steps)
@@ -52,7 +51,6 @@ def create_new_route(num_places):
 
 def crossover(a, b):
     """
-
     :param a: route to crossover
     :param b: route to crossover
     :return: a, b: routes after crossover
@@ -73,10 +71,10 @@ def crossover(a, b):
         random_index = intersection
 
         while random_index == intersection:  # generate a random index that is not intersection
-            random_index = random.randint(1, len(a_copy) - 2)
+            random_index = random.randint(1, len(a) - 2)
 
         # swap intersection place with random place
-        temp = a[intersection]
+        temp = a_copy[intersection]
         a_copy[intersection] = a_copy[random_index]
         a_copy[random_index] = temp
 
@@ -94,7 +92,6 @@ def crossover(a, b):
 
 def mutate(routes, prob_mut):
     """
-
     :param routes: routes to mutate (or not)
     :param prob_mut: probability of performing mutation
     :return: routes after mutation
@@ -125,7 +122,6 @@ def fitness(a, our_map):
     """
     Determines fitness score of route.
     Score is defined by the total distance.
-
     :param a: route which we are finding fitness of
     :param our_map: adjacency matrix of places
     :return: fitness score
@@ -178,9 +174,9 @@ def fitness_of_best_in_population(population, our_map):
     return fit
 
 
-def remove_from_pop(how_many_to_kill, population, our_map):
+def remove_from_pop(num_kill, population, our_map):
     ranked_pop = sort_population(population, our_map)
-    survival_of_the_fittest = ranked_pop[0: (len(population) - how_many_to_kill)]
+    survival_of_the_fittest = ranked_pop[0: (len(population) - num_kill)]
 
     return np.array(survival_of_the_fittest)
 
@@ -194,11 +190,13 @@ def breeding(population, our_map, num_places):
     for i in range(0, keep):
         children.append(population[fittest[i]])
     while len(children) < pop_size:
-        parent_1_index = random.randint(keep, len(fittest)-1)
+        parent_1_index = random.randint(0, len(fittest) - 1)
         parent_2_index = parent_1_index
         while parent_1_index == parent_2_index:
-            parent_2_index = random.randint(keep, len(fittest)-1)
+            parent_2_index = random.randint(0, len(fittest) - 1)
         child = crossover(population[fittest[parent_1_index]], population[fittest[parent_2_index]])[0]
+        # child = population[fittest[parent_1_index]]
+
         children.append(child)
 
     # for i in range(keep, len(fittest) - 1, 2):
@@ -244,7 +242,7 @@ def main():
         population = breeding(population, our_map, N)
 
     last = None
-    for current_route in best_routes[-5:]:
+    for current_route in best_routes:
         locations_to_render = [num_to_object[x] for x in current_route]
         if last != locations_to_render:
             generator.renderLocations(locations_to_render)
